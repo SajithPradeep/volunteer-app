@@ -54,14 +54,29 @@ router.get("/user/profile", auth, async (req, res) => {
   }
 });
 
-// Pending to start tomorrow
-// router.patch("/user/update", auth, async (req, res) => {
-//   try {
+router.patch("/user/update", auth, async (req, res) => {
+  const updatesAvailable = ["name", "email", "password", "userType"];
+  const update = Object.keys(req.body)
 
-//   } catch (e) {
-
-//   }
-// })
+  const isUpdateAllowed = update.every((value) => {
+    return updatesAvailable.includes(value)
+  })
+  if (!isUpdateAllowed) {
+    return res.status(400).send({
+      error: "Invalid Updates"
+    })
+  }
+  try {
+    update.forEach(value => {
+      req.user[value] = req.body[value]
+    })
+    await req.user.save()
+    res.send(req.user)
+  } catch (e) {
+    res.status(400).send(e)
+  }
+  res.send()
+})
 
 router.post("/user/logout", auth, async (req, res) => {
   try {
