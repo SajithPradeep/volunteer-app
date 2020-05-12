@@ -24,7 +24,14 @@ const userSchema = mongoose.Schema({
     userType: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        default: "Volunteer",
+        validate(value) {
+            if (value !== "Volunteer" && value !== "Provider" && value !== "Admin") {
+                console.log(value)
+                throw new Error("Only user types Volunteer and Provider are allowed")
+            }
+        }
     },
     password: {
         type: String,
@@ -46,6 +53,12 @@ const userSchema = mongoose.Schema({
     timestamps: true,
 });
 
+userSchema.virtual("items", {
+    ref: "Item",
+    localField: "_id",
+    foreignField: "owner"
+});
+
 userSchema.methods.generateAuthToken = async function () {
     const user = this;
     const token = jwt.sign({
@@ -56,6 +69,14 @@ userSchema.methods.generateAuthToken = async function () {
     });
     await user.save()
     return token;
+}
+
+userSchema.methods.isAdmin = async function () {
+    const user = this;
+    if (user.userType !== 'Admin') {
+        return false
+    }
+    return true
 }
 
 userSchema.methods.toJSON = function () {
